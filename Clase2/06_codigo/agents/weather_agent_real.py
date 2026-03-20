@@ -17,7 +17,9 @@ except ModuleNotFoundError:
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
 MODEL_NAME = os.getenv("OLLAMA_MODEL", "llama3")
 
-context = {"pending_weather_question": None, "city": None, "zone": None}
+SUPPORTED_CITY = "medellin"
+
+context = {"pending_weather_question": None, "zone": None}
 
 
 def _normalize(text: str) -> str:
@@ -45,6 +47,8 @@ def is_weather_question(question: str) -> bool:
     keywords = [
         "clima",
         "lluvia",
+        "llover",
+        "llueve",
         "temperatura",
         "tiempo",
         "sombrilla",
@@ -87,15 +91,26 @@ def zone_context_note(zone: str) -> str:
     return f"La zona indicada es {zone}; usa esta referencia para personalizar la recomendacion."
 
 
+def extract_zone(question: str) -> str | None:
+    known_zones = ["poblado", "laureles", "estadio", "belen", "envigado", "sabaneta"]
+    q = _normalize(question)
+    for zone in known_zones:
+        if zone in q:
+            return zone
+    return None
+
+
 def build_prompt(question: str, weather: dict, zone: str | None) -> str:
     current = weather["current"]
     daily = weather["daily"]
+    today = weather["today"]
     zone_text = zone if zone else "No especificada"
     zone_note = zone_context_note(zone) if zone else "No hay zona especificada."
     return f"""
 Eres un agente meteorologico util, claro y breve.
 
 Pregunta del usuario:
+Fecha: {today.strftime("%Y-%m-%d")}
 {question}
 
 Datos reales del clima consultados por API:
@@ -114,6 +129,7 @@ Precipitacion total esperada: {daily.get('precipitation_sum')}
 Probabilidad maxima de precipitacion: {daily.get('precipitation_probability_max')} %
 
 Contexto del usuario:
+Ciudad fija del agente: Medellin
 Zona/Barrio: {zone_text}
 Nota contextual: {zone_note}
 
@@ -121,55 +137,61 @@ Instrucciones:
 - Responde en espanol.
 - No inventes datos.
 - Se breve, maximo 4 lineas.
+- La primera linea debe empezar con: Fecha: {today.strftime("%Y-%m-%d")}
 - Explica si parece que va a llover o no.
 - Si aplica, recomienda sombrilla, chaqueta ligera o precaucion al salir.
-- Usa el barrio o zona solo como contexto de recomendacion.
+- Usa el barrio o zona solo como contexto de recomendacion en Medellin.
 """
 
 
 def _fallback_answer(weather: dict, zone: str | None) -> str:
+    today = weather["today"]
     city = weather["city"]
     temp = weather["current"].get("temperature_2m")
     rain_prob = weather["daily"].get("precipitation_probability_max")
     zone_note = f" Zona: {zone}." if zone else ""
     recommendation = "Lleva sombrilla." if (rain_prob or 0) >= 40 else "No parece necesario llevar sombrilla."
     return (
+        f"Fecha: {today.strftime('%Y-%m-%d')}. "
         f"En {city} la temperatura actual es {temp} C y la probabilidad maxima de lluvia hoy es {rain_prob}%."
         f" {recommendation}{zone_note}"
     )
 
 
-def answer_weather(question: str, city: str, zone: str | None) -> str:
-    weather = get_weather_forecast(city)
+def answer_weather(question: str, zone: str | None) -> str:
+    weather = get_weather_forecast()
     prompt = build_prompt(question, weather, zone)
     llm_answer = ask_ollama(prompt)
     if llm_answer:
+        today_text = weather["today"].strftime("%Y-%m-%d")
+        if today_text not in llm_answer:
+            return f"Fecha: {today_text}\n{llm_answer}"
         return llm_answer
     return _fallback_answer(weather, zone)
 
 
 def agent(question: str) -> str:
     q = question.strip()
+    city = extract_city(q)
+    detected_zone = extract_zone(q)
 
-    if context["pending_weather_question"] and context["city"] == "medellin":
+    if detected_zone:
+        context["zone"] = detected_zone
+
+    if city and city != SUPPORTED_CITY:
+        return "Este agente solo consulta clima para Medellin. Prueba con algo como: va a llover hoy en Medellin?"
+
+    if context["pending_weather_question"]:
         if looks_like_zone_answer(q):
             context["zone"] = q
             original_question = context["pending_weather_question"]
             context["pending_weather_question"] = None
-            return answer_weather(original_question, context["city"], context["zone"])
+            return answer_weather(original_question, context["zone"])
 
     if is_weather_question(q):
-        city = extract_city(q)
-        if city:
-            context["city"] = city
-        if not context["city"]:
-            return "No detecte la ciudad. Prueba con algo como: va a llover hoy en Medellin?"
-        if context["city"] == "medellin" and not context["zone"]:
-            context["pending_weather_question"] = q
-            return "Estas en Medellin. En que barrio o zona estas ubicado?"
-        return answer_weather(q, context["city"], context["zone"])
+        return answer_weather(q, context["zone"])
 
-    return "Puedo ayudarte con clima, lluvia, temperatura y pronostico. Ejemplo: clima medellin"
+    return "Puedo ayudarte con clima en Medellin. Ejemplo: va a llover hoy en Medellin?"
 
 
 def main() -> None:

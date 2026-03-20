@@ -1,13 +1,19 @@
-
-from logistics_agent import agent as logistics_agent
-from logistics_tool import get_response_mode, set_response_mode
-from ollama_intent import OLLAMA_HOST, OLLAMA_MODEL, classify_intent, ollama_status
-from simple_agent import agent as weather_agent
+import sys
 import unicodedata
+from pathlib import Path
+
+
+BASE_DIR = Path(__file__).resolve().parent
+WEATHER_DIR = BASE_DIR / "Clase2" / "06_codigo"
+
+weather_dir_str = str(WEATHER_DIR)
+if weather_dir_str not in sys.path:
+    sys.path.insert(0, weather_dir_str)
+
+from agents.weather_agent_real import agent as weather_agent
 
 
 def _normalize(text: str) -> str:
-    # Normalize accents so intent matching works with/without tildes.
     text = text.lower().strip()
     return "".join(
         c for c in unicodedata.normalize("NFD", text)
@@ -15,66 +21,31 @@ def _normalize(text: str) -> str:
     )
 
 
-print("Agente IA (Clima + Logistica). Escribe 'salir' para terminar.")
-print("Ejemplos:")
-print("- clima medellin")
-print("- repartidor mas cercano 6.2442 -75.5812")
-print("- costo promedio por km")
-print("- cuanto tarda 8.4 km carga 2")
-print("- modo presentacion")
-print("- modo tecnico")
-print("- estado ollama")
-print(f"Modo actual logistica: {get_response_mode()}")
+def route_question(question: str) -> str:
+    return weather_agent(question)
 
 
-while True:
-    question = input("Pregunta: ").strip()
+def main() -> None:
+    print("Agente IA de Clima para Medellin. Escribe 'salir' para terminar.")
+    print("Ejemplos:")
+    print("- clima medellin")
+    print("- va a llover hoy en medellin")
+    print("- temperatura hoy en medellin")
+    print("- necesito sombrilla en medellin")
 
-    if question.lower() == "salir":
-        break
+    while True:
+        question = input("Pregunta: ").strip()
 
-    lower_q = _normalize(question)
+        if _normalize(question) == "salir":
+            break
 
-    if lower_q in {"modo presentacion", "modo tecnico"}:
-        selected_mode = lower_q.split()[-1]
-        set_response_mode(selected_mode)
-        print(f"Agente: modo logistica cambiado a {selected_mode}.")
-        continue
+        try:
+            response = route_question(question)
+        except Exception as exc:
+            response = f"Ocurrio un error: {exc}"
 
-    if lower_q == "estado ollama":
-        status = ollama_status()
-        print(
-            "Agente: "
-            f"ollama={status}, host={OLLAMA_HOST}, modelo={OLLAMA_MODEL}"
-        )
-        continue
+        print("Agente:", response)
 
-    logistics_keywords = [
-        "repartidor", "pickup", "recogida", "prioritario", "pedido",
-        "costo", "combustible", "mantenimiento", "km", "kilometro",
-        "motocicleta", "moto", "flota", "eta", "tarda", "demora",
-        "tiempo", "entrega", "trafico", "carga",
-    ]
 
-    weather_keywords = ["clima", "lluvia", "temperatura"]
-
-    # Reglas directas primero para consultas comunes.
-    if any(k in lower_q for k in logistics_keywords):
-        response = logistics_agent(question)
-    elif any(k in lower_q for k in weather_keywords):
-        response = weather_agent(question)
-    else:
-        # Si no hay match claro, pedir clasificacion a Ollama.
-        intent = classify_intent(question)
-        if intent == "logistica":
-            response = logistics_agent(question)
-        elif intent == "clima":
-            response = weather_agent(question)
-        else:
-            response = (
-                "Puedo ayudarte en clima y logistica. "
-                "Ejemplo: clima medellin / costo promedio por km / "
-                "repartidor mas cercano 6.2442 -75.5812"
-            )
-
-    print("Agente:", response)
+if __name__ == "__main__":
+    main()

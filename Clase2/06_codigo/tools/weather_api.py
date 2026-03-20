@@ -1,30 +1,37 @@
 import requests
+from datetime import datetime
+
 
 GEOCODING_URL = "https://geocoding-api.open-meteo.com/v1/search"
 FORECAST_URL = "https://api.open-meteo.com/v1/forecast"
+MEDELLIN_NAME = "Medellin"
+MEDELLIN_COUNTRY = "Colombia"
 
-def geocode_city(city: str) -> dict:
-    params = {"name": city, "count": 1, "language": "es", "format": "json"}
+
+def geocode_medellin() -> dict:
+    params = {"name": MEDELLIN_NAME, "count": 1, "language": "es", "format": "json"}
     response = requests.get(GEOCODING_URL, params=params, timeout=30)
     response.raise_for_status()
     data = response.json()
     results = data.get("results")
     if not results:
-        raise ValueError(f"No encontré la ciudad: {city}")
+        raise ValueError("No encontré Medellin en la API de geocodificacion.")
     place = results[0]
     return {
-        "name": place["name"],
+        "name": place.get("name", MEDELLIN_NAME),
         "latitude": place["latitude"],
         "longitude": place["longitude"],
-        "country": place.get("country", "")
+        "country": place.get("country", MEDELLIN_COUNTRY)
     }
 
-def get_weather_forecast(city: str) -> dict:
-    place = geocode_city(city)
+
+def get_weather_forecast() -> dict:
+    place = geocode_medellin()
+    today = datetime.now().astimezone()
     params = {
         "latitude": place["latitude"],
         "longitude": place["longitude"],
-        "timezone": "auto",
+        "timezone": "America/Bogota",
         "current": "temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,rain,weather_code,wind_speed_10m",
         "daily": "weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max"
     }
@@ -38,6 +45,7 @@ def get_weather_forecast(city: str) -> dict:
         "country": place["country"],
         "latitude": place["latitude"],
         "longitude": place["longitude"],
+        "today": today,
         "current": current,
         "daily": {
             "temperature_max": daily.get("temperature_2m_max", [None])[0],
