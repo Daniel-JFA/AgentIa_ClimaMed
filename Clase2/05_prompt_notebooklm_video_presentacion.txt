@@ -1,0 +1,32 @@
+Actúa como un profesor experto en Inteligencia Artificial, desarrollo de software y pedagogía universitaria.
+
+Necesito que crees un recurso educativo completo que incluya:
+1. Un guion para un video de 10 a 12 minutos
+2. Una presentación estructurada tipo diapositivas
+3. Explicaciones claras y progresivas
+
+Tema:
+"Construcción de un Agente de IA real que consulta una API de clima y utiliza un modelo local con Ollama"
+
+Contexto:
+- recibe preguntas en lenguaje natural
+- detecta intención de clima
+- detecta ciudad
+- si es Medellín, pregunta barrio o zona
+- guarda memoria simple
+- consulta Open-Meteo
+- usa Ollama (llama3)
+- da recomendaciones útiles
+
+Arquitectura:
+Usuario → Agente → API Clima → Ollama → Respuesta
+
+Incluye:
+- Qué es un agente de IA
+- Chatbot vs agente
+- Qué es una tool
+- Qué es memoria
+- Flujo del sistema
+- Uso de Ollama
+- Demo paso a paso
+- Conclusión
