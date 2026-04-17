@@ -121,14 +121,14 @@ Resultado esperado: respuestas diferentes por intencion.
 
 Marca cada item con SI o NO:
 
-- [ ] Se creo y activo el entorno virtual
-- [ ] Se instalaron dependencias sin error
-- [ ] El CLI responde en terminal
-- [ ] La web abre en http://127.0.0.1:5000
-- [ ] El endpoint /health responde OK
-- [ ] El endpoint /api/ask responde JSON valido
-- [ ] La respuesta cambia entre humedad y viento
-- [ ] El agente rechaza ciudades fuera de Medellin
+- [SI] Se creo y activo el entorno virtual
+- [SI] Se instalaron dependencias sin error
+- [SI] El CLI responde en terminal
+- [SI] La web abre en http://127.0.0.1:5000
+- [SI] El endpoint /health responde OK
+- [SI] El endpoint /api/ask responde JSON valido
+- [SI] La respuesta cambia entre humedad y viento
+- [SI] El agente rechaza ciudades fuera de Medellin
 
 ---
 
