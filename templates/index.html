@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agente de IA para Clima en Medellín</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1 class="header-title">
+                    🌤️ Agente de Clima para Medellín
+                </h1>
+                <p class="header-subtitle">
+                    Consúltale sobre el clima usando IA
+                </p>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main">
+            <!-- Chat Container -->
+            <div class="chat-container">
+                <div id="chatBox" class="chat-box">
+                    <div class="welcome-message">
+                        <h2>Bienvenido 👋</h2>
+                        <p>Soy un agente de IA que te ayuda con información del clima en Medellín.</p>
+                        <p><strong>Ejemplos de preguntas:</strong></p>
+                        <div class="quick-examples" id="quickExamples"></div>
+                    </div>
+                </div>
+
+                <!-- Input Area -->
+                <div class="input-area">
+                    <form id="questionForm" onsubmit="sendQuestion(event)">
+                        <div class="input-wrapper">
+                            <input 
+                                type="text" 
+                                id="questionInput" 
+                                class="question-input" 
+                                placeholder="¿Cuál es tu pregunta sobre el clima?"
+                                autocomplete="off"
+                            >
+                            <button type="submit" class="send-btn" id="sendBtn">
+                                <i class="bi bi-send-fill"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <!-- Zones Section -->
+                <section class="sidebar-section">
+                    <h3 class="sidebar-title">
+                        📍 Zonas Soportadas
+                    </h3>
+                    <div id="zonesList" class="zones-list"></div>
+                </section>
+
+                <!-- Info Section -->
+                <section class="sidebar-section">
+                    <h3 class="sidebar-title">ℹ️ Información</h3>
+                    <div class="info-box">
+                        <p><strong>Fuente:</strong> Open-Meteo (datos reales)</p>
+                        <p><strong>Modelo:</strong> Ollama (local)</p>
+                        <p><strong>Sin alucinaciones:</strong> Datos verificados</p>
+                    </div>
+                </section>
+
+                <!-- Clear History -->
+                <button class="clear-btn" onclick="clearChat()">
+                    🗑️ Limpiar historial
+                </button>
+            </aside>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Desarrollado para presentación en clase | Agente de IA basado en APIs reales</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

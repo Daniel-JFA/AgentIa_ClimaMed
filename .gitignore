@@ -2,16 +2,41 @@
 __pycache__/
 *.py[cod]
 *$py.class
+*.so
+
+# Packaging / build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
 
 # Virtual environments
 .venv/
 venv/
+env/
 
 # Jupyter
 .ipynb_checkpoints/
 
 # Editor settings
 .vscode/
+.idea/
+*.swp
+*.swo
+
+# Test / coverage / type-check
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Logs / env files
+*.log
+.env
+.env.*
 
 # OS files
 .DS_Store

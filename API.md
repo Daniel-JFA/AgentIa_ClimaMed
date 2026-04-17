@@ -1,17 +1,27 @@
-# Documentacion de la API
+# Documentación de APIs
 
-Este proyecto usa principalmente la API de Open-Meteo para consultar el clima real de Medellin.
-De forma opcional, tambien usa la API local de Ollama para redactar respuestas mas naturales.
+Este proyecto usa principalmente la **API de Open-Meteo** para consultar el clima real de Medellín.
+De forma opcional, también usa la **API local de Ollama** para redactar respuestas más naturales.
 
-## 1. API principal: Open-Meteo
+## 1. Descripción general
 
-### 1.1 Geocodificacion
+| API | Propósito | Tipo | Disponibilidad |
+|-----|----------|------|----------------|
+| **Open-Meteo Geocoding** | Obtener coordenadas de Medellín | REST GET | Pública (gratis) |
+| **Open-Meteo Forecast** | Datos climáticos actuales y diarios | REST GET | Pública (gratis) |
+| **Ollama Generate** | Redacción natural de respuestas | REST POST | Local, opcional |
+
+---
+
+## 2. API principal: Open-Meteo
+
+### 2.1 Geocodificación
 
 Se usa para obtener las coordenadas de Medellin antes de consultar el pronostico.
 
 - Metodo: `GET`
 - Endpoint: `https://geocoding-api.open-meteo.com/v1/search`
-- Uso en el proyecto: [`Clase2/06_codigo/tools/weather_api.py`](/home/djfa/Dev/ai/agente_clima_medellin/Clase2/06_codigo/tools/weather_api.py#L8)
+- Uso en el proyecto: [weather_api.py](Clase2/06_codigo/tools/weather_api.py)
 
 #### Parametros usados
 
@@ -23,9 +33,9 @@ Se usa para obtener las coordenadas de Medellin antes de consultar el pronostico
 #### Ejemplo
 
 ```bash
-curl "https://geocoding-api.open-meteo.com/v1/search?name=Medellin&count=1&language=es&format=json"
-```
+curl2.2 Pronóstico del clima
 
+Se usa para obtener las condiciones actuales y el resumen diario del clima de Medellí
 #### Campos relevantes de respuesta
 
 - `results[0].name`
@@ -39,7 +49,7 @@ Se usa para obtener las condiciones actuales y el resumen diario del clima de Me
 
 - Metodo: `GET`
 - Endpoint: `https://api.open-meteo.com/v1/forecast`
-- Uso en el proyecto: [`Clase2/06_codigo/tools/weather_api.py`](/home/djfa/Dev/ai/agente_clima_medellin/Clase2/06_codigo/tools/weather_api.py#L24)
+- Uso en el proyecto: [weather_api.py](Clase2/06_codigo/tools/weather_api.py)
 
 #### Parametros usados por el agente
 
