@@ -1,127 +1,231 @@
-# Agente de Clima para Medellin
+# Agente de Clima para Medellín 🌤️
 
-Agente de linea de comandos en Python para consultar el clima real de Medellin.
+Agente de línea de comandos en Python para consultar el clima real de Medellín con respuestas naturales.
 
-El proyecto consulta Open-Meteo en cada solicitud y, si Ollama esta disponible localmente, usa un modelo LLM para redactar una respuesta mas natural. Si Ollama no responde, el agente sigue funcionando con un fallback basado en datos reales.
+El proyecto consulta **Open-Meteo** en cada solicitud y, si **Ollama** está disponible localmente, usa un modelo LLM para redactar una respuesta más natural. Si Ollama no responde, el agente sigue funcionando perfectamente con un fallback inteligente basado en datos reales.
 
-## Que hace
+## ¿Qué hace?
 
-- Responde preguntas de clima para Medellin.
-- Usa datos reales de APIs externas.
-- Incluye la fecha actual en la respuesta.
-- Puede personalizar la recomendacion si detecta una zona como `poblado`, `laureles` o `belen`.
-- Rechaza otras ciudades para mantener el flujo enfocado solo en Medellin.
+- ✅ Responde preguntas de clima para Medellín en español.
+- ✅ Usa datos **reales** de APIs externas (sin alucinaciones).
+- ✅ Incluye la fecha actual en cada respuesta.
+- ✅ Personaliza recomendaciones por zona/barrio (Poblado, Laureles, Belén, etc.).
+- ✅ Rechaza otras ciudades para mantener el flujo enfocado en Medellín.
+- ✅ Funciona **con o sin Ollama** (degradación elegante).
 
-## Herramienta de IA usada
+## Herramientas de IA
 
-Este proyecto no usa un framework de agentes como LangChain, CrewAI o AutoGen.
+Este proyecto **no usa frameworks** como LangChain, CrewAI o AutoGen.
 
-La implementacion del agente esta hecha de forma manual en Python, y la herramienta de IA generativa que estamos usando es:
+La implementación es manual en Python:
 
-- `Ollama`, via `POST /api/generate`, para transformar los datos del clima en una respuesta natural.
-
-La fuente real de informacion meteorologica no es el modelo, sino:
-
-- `Open-Meteo Geocoding API`
-- `Open-Meteo Forecast API`
+| Componente | Rol |
+|-----------|-----|
+| **Python** | Orquestación del agente |
+| **Ollama** | (Opcional) Redacción natural con LLM local |
+| **Open-Meteo APIs** | Fuente de datos meteorológicos reales |
 
 En otras palabras:
-
-- `Open-Meteo` aporta los datos.
-- `Ollama` aporta redaccion natural.
-- `Python` orquesta el agente.
+- `Open-Meteo` → aporta los datos
+- `Ollama` → aporta redacción natural (si está disponible)
+- `Python` → orquesta el agente
 
 ## Arquitectura
 
-Archivos principales:
+```
+Usuario (CLI)
+    ↓
+main.py (loop de preguntas)
+    ↓
+weather_agent_real.py (routing, detección de ciudad/zona)
+    ↓
+weather_api.py (APIs externas)
+    ├→ Open-Meteo Geocoding (obtener coordenadas)
+    └→ Open-Meteo Forecast (datos climáticos)
+    ↓
+ask_ollama() → Respuesta natural (si disponible)
+    ↓ (fallback si Ollama no responde)
+_fallback_answer() → Respuesta estructurada con datos reales
+```
 
-- [`main.py`](/home/djfa/Dev/ai/agente_clima_medellin/main.py)
-- [`Clase2/06_codigo/agents/weather_agent_real.py`](/home/djfa/Dev/ai/agente_clima_medellin/Clase2/06_codigo/agents/weather_agent_real.py)
-- [`Clase2/06_codigo/tools/weather_api.py`](/home/djfa/Dev/ai/agente_clima_medellin/Clase2/06_codigo/tools/weather_api.py)
-- [`API.md`](/home/djfa/Dev/ai/agente_clima_medellin/API.md)
+## Zonas soportadas
 
-Flujo:
+El agente reconoce y personaliza recomendaciones para estas zonas de Medellín:
 
-1. El usuario escribe una pregunta.
-2. `main.py` envia la pregunta al agente de clima.
-3. El agente valida que la consulta sea para Medellin.
-4. `weather_api.py` consulta Open-Meteo.
-5. El agente arma un prompt con fecha y datos reales.
-6. Si Ollama responde, se usa esa salida.
-7. Si Ollama no responde, se devuelve un fallback con los datos de Open-Meteo.
+| Zona | Características |
+|------|-----------------|
+| **El Poblado** | Zona premium urbana; lluvia afecta actividades al aire libre |
+| **Laureles** | Residencial y comercial; clima variable |
+| **Estadio** | Zona muy transitada; sombrilla útil |
+| **Belén** | Residencial montañoso; mayor exposición al clima |
+| **Envigado** | Zona sur; temperatura más baja |
+| **Sabaneta** | Zona sur; temperatura baja en lluvia |
+| **Robledo** | Zona norte residencial; clima fresco |
+| **Arví** | Montañosa; clima más frío y lluvioso |
+| **Castilla, Santa Elena, Moravia** | Zonas adicionales soportadas |
 
 ## APIs consumidas
 
 ### 1. Open-Meteo Geocoding API
-
-Se usa para resolver las coordenadas de Medellin.
-
+Resuelve coordenadas de Medellín.
 - Endpoint: `https://geocoding-api.open-meteo.com/v1/search`
-- Metodo: `GET`
+- Método: `GET`
 
 ### 2. Open-Meteo Forecast API
-
-Se usa para obtener condiciones actuales y pronostico diario.
-
+Datos de clima actual y pronóstico del día.
 - Endpoint: `https://api.open-meteo.com/v1/forecast`
-- Metodo: `GET`
+- Método: `GET`
+- Incluye: temperatura, humedad, precipitación, viento, código meteorológico
 
-### 3. Ollama Generate API
+### 3. Ollama Generate API (opcional)
+Redacta respuestas naturales con LLM local.
+- Endpoint: `http://localhost:11434/api/generate`
+- Método: `POST`
+- **Nota:** El agente funciona sin esto (ve fallback abajo)
 
-Se usa de forma opcional para redactar la respuesta final.
-
-- Endpoint local: `http://localhost:11434/api/generate`
-- Metodo: `POST`
-
-La documentacion ampliada esta en:
-
-- [`API.md`](/home/djfa/Dev/ai/agente_clima_medellin/API.md)
+Documentación completa: [`API.md`](API.md)
 
 ## Requisitos
 
-- Python 3
-- `requests`
-- Conexion a internet para Open-Meteo
-- Ollama opcional si quieres salida mas natural
+- Python 3.7+
+- `requests` (HTTP client)
+- Conexión a internet (para Open-Meteo)
+- Ollama (recomendado para mejores respuestas, pero opcional)
 
-## Ejecucion
+## Instalación
 
-Desde la raiz del proyecto:
+```bash
+# Clonar o descargar el proyecto
+cd agente_clima_medellin
+
+# Crear entorno virtual (recomendado)
+python -m venv .venv
+source .venv/bin/activate  # En Windows: .venv\Scripts\activate
+
+# Instalar dependencias
+pip install -r Clase2/06_codigo/requirements.txt
+```
+
+## Ejecución
 
 ```bash
 python main.py
 ```
 
-Ejemplos:
+### Ejemplos de consultas
 
 ```text
 clima medellin
-va a llover hoy en medellin
+va a llover hoy en medellin?
 temperatura hoy en medellin
 necesito sombrilla en medellin
+clima en el poblado
+pronostico en laureles
+temperature en belen
 ```
 
-## Comportamiento esperado
+## Comportamiento
 
-- Si preguntas por Medellin, responde con clima real.
-- Si no indicas ciudad, asume Medellin.
-- Si preguntas por otra ciudad, el agente lo rechaza.
-- La respuesta incluye la fecha actual.
+### Con Ollama disponible (respuesta óptima)
+```
+Pregunta: va a llover hoy en medellin?
 
-## Ejemplo de salida
-
-```text
-Fecha: 2026-03-20. En Medellin la temperatura actual es 22.6 C y la probabilidad maxima de lluvia hoy es 15%. No parece necesario llevar sombrilla.
+Agente: Fecha: 2026-04-17
+En Medellín, la probabilidad de lluvia es del 55%. Te recomiendo llevar sombrilla.
+La temperatura ronda 22°C, así que puedes ir con ropa ligera.
 ```
 
-## Notas
+### Sin Ollama (fallback inteligente)
+```
+Pregunta: va a llover hoy en medellin?
 
-- El agente consulta la API en cada solicitud; no trabaja con datos hardcodeados.
-- Ollama es opcional. Si no esta levantado, el agente sigue respondiendo.
-- El proyecto esta enfocado en un solo caso de uso: clima para Medellin.
+Agente: Fecha: 2026-04-17. En Medellín: 22°C, sensación de 21°C. 
+Lluvia esperada: 55%. Posible lluvia; sombrilla recomendada.
+```
 
-## Referencias oficiales
+## Características avanzadas
 
-- Open-Meteo Geocoding API: https://open-meteo.com/en/docs/geocoding-api
-- Open-Meteo Forecast API: https://open-meteo.com/en/docs
-- Ollama API: https://docs.ollama.com/api/generate
+### 1. Validación de ciudades
+Solo responde sobre **Medellín**. Rechaza otras ciudades:
+```
+Pregunta: clima en bogota?
+Agente: Este agente solo consulta clima para Medellín...
+```
+
+### 2. Detección automática de zonas
+Identifica zonas en la pregunta y personaliza respuestas:
+```
+Pregunta: hace frio en el poblado?
+Agente: [Personaliza con contexto del Poblado]
+```
+
+### 3. Contexto conversacional persistente
+Recuerda la zona seleccionada en la sesión actual:
+```
+Pregunta: clima en laureles
+[Agente recuerda: zona = "laureles"]
+
+Pregunta: va a llover?
+[Usa "laureles" como contexto]
+```
+
+### 4. Manejo robusto de errores
+- APIs caídas: mensaje claro al usuario
+- Ollama no responde: usa fallback automático
+- Preguntas inválidas: sugiere ejemplos
+
+## Configuración
+
+Variables de entorno (opcionales):
+```bash
+export OLLAMA_URL="http://localhost:11434/api/generate"
+export OLLAMA_MODEL="llama3"
+```
+
+Por defecto usa estos valores si no están definidas.
+
+## Archivos principales
+
+- [main.py](main.py) - Punto de entrada
+- [Clase2/06_codigo/agents/weather_agent_real.py](Clase2/06_codigo/agents/weather_agent_real.py) - Lógica del agente
+- [Clase2/06_codigo/tools/weather_api.py](Clase2/06_codigo/tools/weather_api.py) - Consumo de APIs
+- [API.md](API.md) - Documentación detallada de APIs
+
+## Para la presentación en clase
+
+### Demostración recomendada
+
+1. **Setup inicial**
+   ```bash
+   python main.py
+   ```
+
+2. **Casos de uso básicos**
+   - `clima medellin`
+   - `temperatura hoy?`
+   - `va a llover?`
+
+3. **Con zonas**
+   - `clima en el poblado`
+   - `hace frio en arvi?`
+
+4. **Casos edge**
+   - `clima en bogota` (rechaza)
+   - `hola` (pide aclaración)
+
+### Puntos clave para explicar
+
+✨ **Sin frameworks**: Implementación manual de agente
+✨ **Datos reales**: Open-Meteo como fuente de verdad
+✨ **Respuestas naturales**: Ollama para redacción (si disponible)
+✨ **Resiliencia**: Funciona sin Ollama (degradación elegante)
+✨ **Contexto persistente**: Recuerda zonas en la sesión
+✨ **Personalización**: Recomendaciones por barrio/zona
+
+## Limitaciones y alcance
+
+- ✅ Solo funciona para **Medellín** (por diseño)
+- ⚠️ Ollama debe estar corriendo localmente (opcional pero recomendado)
+- ⚠️ Requiere conexión a internet para Open-Meteo
+- ⚠️ El pronóstico es del día actual solamente
+# AgentIa_ClimaMed
