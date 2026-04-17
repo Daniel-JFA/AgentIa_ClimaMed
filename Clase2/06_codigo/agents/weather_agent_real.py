@@ -14,7 +14,7 @@ except ModuleNotFoundError:
 
 
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
-MODEL_NAME = os.getenv("OLLAMA_MODEL", "llama3")
+MODEL_NAME = os.getenv("OLLAMA_MODEL", "qwen3-vl:8b")
 SUPPORTED_CITY = "medellin"
 context = {"pending_weather_question": None, "zone": None}
 
